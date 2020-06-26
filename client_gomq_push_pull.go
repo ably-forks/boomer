@@ -1,10 +1,12 @@
-// +build !goczmq,!gomq_push_pull
+// +build gomq_push_pull
 
 package boomer
 
 import (
 	"fmt"
 	"log"
+	"runtime"
+	"runtime/debug"
 
 	"github.com/zeromq/gomq"
 	"github.com/zeromq/gomq/zmtp"
@@ -13,6 +15,12 @@ import (
 type gomqSocketClient struct {
 	masterHost string
 	masterPort int
+	pushPort int
+	pullPort int
+
+	pushSocket     *gomq.PushSocket
+	pullSocket     *gomq.PullSocket
+
 	identity   string
 
 	dealerSocket gomq.Dealer
@@ -27,8 +35,8 @@ func newClient(masterHost string, masterPort int, identity string) (client *gomq
 	log.Println("Boomer is built with gomq support.")
 	client = &gomqSocketClient{
 		masterHost:             masterHost,
-		masterPort:             masterPort,
-		identity:               identity,
+		pushPort:             masterPort,
+		pullPort:             masterPort + 1,
 		fromMaster:             make(chan *message, 100),
 		toMaster:               make(chan *message, 100),
 		disconnectedFromMaster: make(chan bool),
@@ -38,17 +46,19 @@ func newClient(masterHost string, masterPort int, identity string) (client *gomq
 }
 
 func (c *gomqSocketClient) connect() (err error) {
-	addr := fmt.Sprintf("tcp://%s:%d", c.masterHost, c.masterPort)
-	c.dealerSocket = gomq.NewDealer(zmtp.NewSecurityNull(), c.identity)
+	pushAddr := fmt.Sprintf("tcp://%s:%d", c.masterHost, c.pushPort)
+	pullAddr := fmt.Sprintf("tcp://%s:%d", c.masterHost, c.pullPort)
 
-	if err = c.dealerSocket.Connect(addr); err != nil {
-		return err
-	}
+	pushSocket := gomq.NewPush(zmtp.NewSecurityNull())
+	c.pushSocket = pushSocket
+	pullSocket := gomq.NewPull(zmtp.NewSecurityNull())
+	c.pullSocket = pullSocket
 
-	log.Printf("Boomer is connected to master(%s) press Ctrl+c to quit.\n", addr)
+	c.pushSocket.Connect(pushAddr)
+	c.pullSocket.Connect(pullAddr)
+	log.Printf("Boomer is connected to master(%s:%d|%d) press Ctrl+c to quit.\n", masterHost, masterPort, masterPort+1)
 	go c.recv()
 	go c.send()
-
 	return nil
 }
 
@@ -61,32 +71,27 @@ func (c *gomqSocketClient) recvChannel() chan *message {
 }
 
 func (c *gomqSocketClient) recv() {
+	defer func() {
+		// Temporary work around for https://github.com/zeromq/gomq/issues/75
+		err := recover()
+		if err != nil {
+			log.Printf("%v\n", err)
+			debug.PrintStack()
+			log.Printf("The underlying socket connected to master(%s:%d) may be broken, please restart both locust and boomer\n", masterHost, masterPort+1)
+			runtime.Goexit()
+		}
+	}()
 	for {
-		select {
-		case <-c.shutdownChan:
-			return
-		case msg := <-c.dealerSocket.RecvChannel():
-			if msg.MessageType == zmtp.CommandMessage {
-				continue
-			}
-			if len(msg.Body) == 0 {
-				continue
-			}
-			body, err := msg.Body[0], msg.Err
-			if err != nil {
-				log.Printf("Error reading: %v\n", err)
-				continue
-			}
-			decodedMsg, err := newMessageFromBytes(body)
+		msg, err := c.pullSocket.Recv()
+		if err != nil {
+			log.Printf("Error reading: %v\n", err)
+		} else {
+			msgFromMaster, err := newMessageFromBytes(msg)
 			if err != nil {
 				log.Printf("Msgpack decode fail: %v\n", err)
-				continue
+			} else {
+				c.fromMaster <- msgFromMaster
 			}
-			if decodedMsg.NodeID != c.identity {
-				log.Printf("Recv a %s message for node(%s), not for me(%s), dropped.\n", decodedMsg.Type, decodedMsg.NodeID, c.identity)
-				continue
-			}
-			c.fromMaster <- decodedMsg
 		}
 	}
 }
@@ -115,7 +120,7 @@ func (c *gomqSocketClient) sendMessage(msg *message) {
 		log.Printf("Msgpack encode fail: %v\n", err)
 		return
 	}
-	err = c.dealerSocket.Send(serializedMessage)
+	err = c.pushSocket.Send(serializedMessage)
 	if err != nil {
 		log.Printf("Error sending: %v\n", err)
 	}
