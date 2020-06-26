@@ -7,7 +7,6 @@ import (
 	"log"
 	"runtime"
 	"runtime/debug"
-	"strings"
 
 	"github.com/zeromq/gomq"
 	"github.com/zeromq/gomq/zmtp"
@@ -38,7 +37,6 @@ func newClient(masterHost string, masterPort int, identity string) (client *gomq
 		masterHost:             masterHost,
 		pushPort:             masterPort,
 		pullPort:             masterPort + 1,
-		// identity:               identity,
 		fromMaster:             make(chan *message, 100),
 		toMaster:               make(chan *message, 100),
 		disconnectedFromMaster: make(chan bool),
@@ -117,13 +115,6 @@ func (c *gomqSocketClient) send() {
 }
 
 func (c *gomqSocketClient) sendMessage(msg *message) {
-
-	if !strings.Contains(msg.Type, "heartbeat") {
-		fmt.Println("sending message...")
-		fmt.Println(msg)
-		fmt.Println(msg.serialize())
-	}
-
 	serializedMessage, err := msg.serialize()
 	if err != nil {
 		log.Printf("Msgpack encode fail: %v\n", err)
