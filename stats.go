@@ -275,8 +275,10 @@ func (s *statsEntry) serialize() map[string]interface{} {
 	result["max_response_time"] = s.maxResponseTime
 	result["min_response_time"] = s.minResponseTime
 	result["total_content_length"] = s.totalContentLength
-	result["response_times"] = s.responseTimes
-	result["num_reqs_per_sec"] = s.numReqsPerSec
+	// result["response_times"] = s.responseTimes
+	// result["num_reqs_per_sec"] = s.numReqsPerSec
+	result["response_times"] = make(map[int64]int64)
+	result["num_reqs_per_sec"] = make(map[int64]int64)
 	result["num_fail_per_sec"] = s.numFailPerSec
 	return result
 }
