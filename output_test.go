@@ -7,7 +7,7 @@ import (
 
 func TestGetMedianResponseTime(t *testing.T) {
 	numRequests := int64(10)
-	responseTimes := map[int64]int64{
+	responseTimes := IntMap{
 		100: 1,
 		200: 3,
 		300: 6,
@@ -18,7 +18,7 @@ func TestGetMedianResponseTime(t *testing.T) {
 		t.Error("medianResponseTime should be 300")
 	}
 
-	responseTimes = map[int64]int64{}
+	responseTimes = IntMap{}
 
 	medianResponseTime = getMedianResponseTime(numRequests, responseTimes)
 	if medianResponseTime != 0 {
@@ -58,7 +58,7 @@ func TestGetAvgContentLength(t *testing.T) {
 
 func TestGetCurrentRps(t *testing.T) {
 	numRequests := int64(10)
-	numReqsPerSecond := map[int64]int64{}
+	numReqsPerSecond := IntMap{}
 
 	currentRps := getCurrentRps(numRequests, numReqsPerSecond)
 	if currentRps != 0 {
@@ -88,7 +88,7 @@ func TestConsoleOutput(t *testing.T) {
 	stat["method"] = "post"
 	stat["num_requests"] = int64(100)
 	stat["num_failures"] = int64(10)
-	stat["response_times"] = map[int64]int64{
+	stat["response_times"] = IntMap{
 		10:  1,
 		100: 99,
 	}
@@ -96,7 +96,7 @@ func TestConsoleOutput(t *testing.T) {
 	stat["min_response_time"] = int64(10)
 	stat["max_response_time"] = int64(100)
 	stat["total_content_length"] = int64(100000)
-	stat["num_reqs_per_sec"] = map[int64]int64{
+	stat["num_reqs_per_sec"] = IntMap{
 		1: 20,
 		2: 40,
 		3: 40,

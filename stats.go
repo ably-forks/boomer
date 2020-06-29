@@ -83,8 +83,8 @@ func (s *requestStats) get(name string, method string) (entry *statsEntry) {
 		newEntry := &statsEntry{
 			name:          name,
 			method:        method,
-			numReqsPerSec: make(map[int64]int64),
-			responseTimes: make(map[int64]int64),
+			numReqsPerSec: make(IntMap),
+			responseTimes: make(IntMap),
 		}
 		newEntry.reset()
 		s.entries[name+method] = newEntry
@@ -167,9 +167,9 @@ type statsEntry struct {
 	totalResponseTime    int64
 	minResponseTime      int64
 	maxResponseTime      int64
-	numReqsPerSec        map[int64]int64
-	numFailPerSec        map[int64]int64
-	responseTimes        map[int64]int64
+	numReqsPerSec        IntMap
+	numFailPerSec        IntMap
+	responseTimes        IntMap
 	totalContentLength   int64
 	startTime            int64
 	lastRequestTimestamp int64
@@ -180,12 +180,12 @@ func (s *statsEntry) reset() {
 	s.numRequests = 0
 	s.numFailures = 0
 	s.totalResponseTime = 0
-	s.responseTimes = make(map[int64]int64)
+	s.responseTimes = make(IntMap)
 	s.minResponseTime = 0
 	s.maxResponseTime = 0
 	s.lastRequestTimestamp = time.Now().Unix()
-	s.numReqsPerSec = make(map[int64]int64)
-	s.numFailPerSec = make(map[int64]int64)
+	s.numReqsPerSec = make(IntMap)
+	s.numFailPerSec = make(IntMap)
 	s.totalContentLength = 0
 }
 
@@ -277,8 +277,8 @@ func (s *statsEntry) serialize() map[string]interface{} {
 	result["total_content_length"] = s.totalContentLength
 	// result["response_times"] = s.responseTimes
 	// result["num_reqs_per_sec"] = s.numReqsPerSec
-	result["response_times"] = make(map[int64]int64)
-	result["num_reqs_per_sec"] = make(map[int64]int64)
+	result["response_times"] = make(IntMap)
+	result["num_reqs_per_sec"] = make(IntMap)
 	result["num_fail_per_sec"] = s.numFailPerSec
 	return result
 }

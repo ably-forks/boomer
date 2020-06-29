@@ -38,7 +38,7 @@ func NewConsoleOutput() *ConsoleOutput {
 	return &ConsoleOutput{}
 }
 
-func getMedianResponseTime(numRequests int64, responseTimes map[int64]int64) int64 {
+func getMedianResponseTime(numRequests int64, responseTimes IntMap) int64 {
 	medianResponseTime := int64(0)
 	if len(responseTimes) != 0 {
 		pos := (numRequests - 1) / 2
@@ -76,7 +76,7 @@ func getAvgContentLength(numRequests int64, totalContentLength int64) (avgConten
 	return avgContentLength
 }
 
-func getCurrentRps(numRequests int64, numReqsPerSecond map[int64]int64) (currentRps int64) {
+func getCurrentRps(numRequests int64, numReqsPerSecond IntMap) (currentRps int64) {
 	currentRps = int64(0)
 	numReqsPerSecondLength := int64(len(numReqsPerSecond))
 	if numReqsPerSecondLength != 0 {
@@ -118,7 +118,7 @@ func (o *ConsoleOutput) OnEvent(data map[string]interface{}) {
 		numFailures := s["num_failures"].(int64)
 		row[3] = strconv.FormatInt(numFailures, 10)
 
-		medianResponseTime := getMedianResponseTime(numRequests, s["response_times"].(map[int64]int64))
+		medianResponseTime := getMedianResponseTime(numRequests, s["response_times"].(IntMap))
 		row[4] = strconv.FormatInt(medianResponseTime, 10)
 
 		totalResponseTime := s["total_response_time"].(int64)
@@ -135,7 +135,7 @@ func (o *ConsoleOutput) OnEvent(data map[string]interface{}) {
 		avgContentLength := getAvgContentLength(numRequests, totalContentLength)
 		row[8] = strconv.FormatInt(avgContentLength, 10)
 
-		numReqsPerSecond := s["num_reqs_per_sec"].(map[int64]int64)
+		numReqsPerSecond := s["num_reqs_per_sec"].(IntMap)
 		currentRps := getCurrentRps(numRequests, numReqsPerSecond)
 		row[9] = strconv.FormatInt(currentRps, 10)
 
