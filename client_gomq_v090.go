@@ -1,4 +1,4 @@
-// +build gomq_legacy
+// +build !goczmq
 
 package boomer
 
@@ -12,7 +12,7 @@ import (
 	"github.com/zeromq/gomq/zmtp"
 )
 
-type gomqSocketClient struct {
+type gomqSocketV090Client struct {
 	masterHost string
 	masterPort int
 	pushPort int
@@ -20,8 +20,6 @@ type gomqSocketClient struct {
 
 	pushSocket     *gomq.PushSocket
 	pullSocket     *gomq.PullSocket
-
-	identity   string
 
 	dealerSocket gomq.Dealer
 
@@ -31,9 +29,10 @@ type gomqSocketClient struct {
 	shutdownChan           chan bool
 }
 
-func newClient(masterHost string, masterPort int, identity string) (client *gomqSocketClient) {
+func newV090Client(masterHost string, masterPort int) (client *gomqSocketV090Client) {
 	log.Println("Boomer is built with gomq support.")
-	client = &gomqSocketClient{
+	log.Println("Using the Locust 0.9.0 gomq protocol.")
+	client = &gomqSocketV090Client{
 		masterHost:             masterHost,
 		pushPort:             masterPort,
 		pullPort:             masterPort + 1,
@@ -45,7 +44,7 @@ func newClient(masterHost string, masterPort int, identity string) (client *gomq
 	return client
 }
 
-func (c *gomqSocketClient) connect() (err error) {
+func (c *gomqSocketV090Client) connect() (err error) {
 	pushAddr := fmt.Sprintf("tcp://%s:%d", c.masterHost, c.pushPort)
 	pullAddr := fmt.Sprintf("tcp://%s:%d", c.masterHost, c.pullPort)
 
@@ -62,15 +61,15 @@ func (c *gomqSocketClient) connect() (err error) {
 	return nil
 }
 
-func (c *gomqSocketClient) close() {
+func (c *gomqSocketV090Client) close() {
 	close(c.shutdownChan)
 }
 
-func (c *gomqSocketClient) recvChannel() chan *message {
+func (c *gomqSocketV090Client) recvChannel() chan *message {
 	return c.fromMaster
 }
 
-func (c *gomqSocketClient) recv() {
+func (c *gomqSocketV090Client) recv() {
 	defer func() {
 		// Temporary work around for https://github.com/zeromq/gomq/issues/75
 		err := recover()
@@ -96,11 +95,11 @@ func (c *gomqSocketClient) recv() {
 	}
 }
 
-func (c *gomqSocketClient) sendChannel() chan *message {
+func (c *gomqSocketV090Client) sendChannel() chan *message {
 	return c.toMaster
 }
 
-func (c *gomqSocketClient) send() {
+func (c *gomqSocketV090Client) send() {
 	for {
 		select {
 		case <-c.shutdownChan:
@@ -114,7 +113,7 @@ func (c *gomqSocketClient) send() {
 	}
 }
 
-func (c *gomqSocketClient) sendMessage(msg *message) {
+func (c *gomqSocketV090Client) sendMessage(msg *message) {
 	serializedMessage, err := msg.serialize()
 	if err != nil {
 		log.Printf("Msgpack encode fail: %v\n", err)
@@ -126,6 +125,6 @@ func (c *gomqSocketClient) sendMessage(msg *message) {
 	}
 }
 
-func (c *gomqSocketClient) disconnectedChannel() chan bool {
+func (c *gomqSocketV090Client) disconnectedChannel() chan bool {
 	return c.disconnectedFromMaster
 }

@@ -417,7 +417,12 @@ func (r *slaveRunner) startListener() {
 
 func (r *slaveRunner) run() {
 	r.state = stateInit
-	r.client = newClient(r.masterHost, r.masterPort, r.nodeID)
+
+	if masterVersionV090 {
+	 r.client = newV090Client(r.masterHost, r.masterPort)
+	} else {
+	 r.client = newClient(r.masterHost, r.masterPort, r.nodeID)
+	}
 
 	err := r.client.connect()
 	if err != nil {

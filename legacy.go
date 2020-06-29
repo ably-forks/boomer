@@ -21,6 +21,7 @@ var memoryProfile string
 var memoryProfileDuration time.Duration
 var cpuProfile string
 var cpuProfileDuration time.Duration
+var masterVersionV090 bool
 
 var successRetiredWarning = &sync.Once{}
 var failureRetiredWarning = &sync.Once{}
@@ -86,4 +87,5 @@ func init() {
 	flag.DurationVar(&memoryProfileDuration, "mem-profile-duration", 30*time.Second, "Memory profile duration.")
 	flag.StringVar(&cpuProfile, "cpu-profile", "", "Enable CPU profiling.")
 	flag.DurationVar(&cpuProfileDuration, "cpu-profile-duration", 30*time.Second, "CPU profile duration.")
+	flag.BoolVar(&masterVersionV090, "master-version-0.9.0", false, "Use a gomq protocol compatible with Locust 0.9.0.")
 }
