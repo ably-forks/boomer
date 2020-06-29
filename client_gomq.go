@@ -1,4 +1,4 @@
-// +build !goczmq,!gomq_push_pull
+// +build !goczmq,!gomq_legacy
 
 package boomer
 

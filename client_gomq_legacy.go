@@ -1,4 +1,4 @@
-// +build gomq_push_pull
+// +build gomq_legacy
 
 package boomer
 
