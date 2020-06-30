@@ -15,11 +15,11 @@ import (
 type gomqSocketV090Client struct {
 	masterHost string
 	masterPort int
-	pushPort int
-	pullPort int
+	pushPort   int
+	pullPort   int
 
-	pushSocket     *gomq.PushSocket
-	pullSocket     *gomq.PullSocket
+	pushSocket *gomq.PushSocket
+	pullSocket *gomq.PullSocket
 
 	dealerSocket gomq.Dealer
 
@@ -34,8 +34,8 @@ func newV090Client(masterHost string, masterPort int) (client *gomqSocketV090Cli
 	log.Println("Using the Locust 0.9.0 gomq protocol.")
 	client = &gomqSocketV090Client{
 		masterHost:             masterHost,
-		pushPort:             masterPort,
-		pullPort:             masterPort + 1,
+		pushPort:               masterPort,
+		pullPort:               masterPort + 1,
 		fromMaster:             make(chan *message, 100),
 		toMaster:               make(chan *message, 100),
 		disconnectedFromMaster: make(chan bool),

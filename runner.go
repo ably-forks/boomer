@@ -419,9 +419,9 @@ func (r *slaveRunner) run() {
 	r.state = stateInit
 
 	if masterVersionV090 {
-	 r.client = newV090Client(r.masterHost, r.masterPort)
+		r.client = newV090Client(r.masterHost, r.masterPort)
 	} else {
-	 r.client = newClient(r.masterHost, r.masterPort, r.nodeID)
+		r.client = newClient(r.masterHost, r.masterPort, r.nodeID)
 	}
 
 	err := r.client.connect()
