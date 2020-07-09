@@ -87,15 +87,21 @@ func (c *gomqSocketV090Client) recv() {
 		}
 	}()
 	for {
-		msg, err := c.pullSocket.Recv()
-		if err != nil {
-			log.Printf("Error reading: %v\n", err)
-		} else {
-			msgFromMaster, err := newMessageFromBytes(msg)
+		select {
+		case <-c.shutdownChan:
+			close(c.shutdownChan)
+			return
+		default:
+			msg, err := c.pullSocket.Recv()
 			if err != nil {
-				log.Printf("Msgpack decode fail: %v\n", err)
+				log.Printf("Error reading: %v\n", err)
 			} else {
-				c.fromMaster <- msgFromMaster
+				msgFromMaster, err := newMessageFromBytes(msg)
+				if err != nil {
+					log.Printf("Msgpack decode fail: %v\n", err)
+				} else {
+					c.fromMaster <- msgFromMaster
+				}
 			}
 		}
 	}
