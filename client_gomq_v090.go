@@ -53,8 +53,14 @@ func (c *gomqSocketV090Client) connect() (err error) {
 	pullSocket := gomq.NewPull(zmtp.NewSecurityNull())
 	c.pullSocket = pullSocket
 
-	c.pushSocket.Connect(pushAddr)
-	c.pullSocket.Connect(pullAddr)
+	if err := c.pushSocket.Connect(pushAddr); err != nil {
+		return err
+	}
+
+	if err := c.pullSocket.Connect(pullAddr); err != nil {
+		return err
+	}
+
 	log.Printf("Boomer is connected to master(%s:%d|%d) press Ctrl+c to quit.\n", masterHost, masterPort, masterPort+1)
 	go c.recv()
 	go c.send()
