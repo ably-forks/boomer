@@ -339,12 +339,37 @@ func (r *slaveRunner) onHatchMessage(msg *message) {
 		users, _ = msg.Data["num_clients"]
 	}
 	hatchRate := rate.(float64)
+
 	workers := 0
-	if _, ok := users.(uint64); ok {
-		workers = int(users.(uint64))
-	} else {
-		workers = int(users.(int64))
+	switch w := users.(type) {
+	case int:
+		workers = w
+	case int8:
+		workers = int(w)
+	case int16:
+		workers = int(w)
+	case int32:
+		workers = int(w)
+	case int64:
+		workers = int(w)
+	case uint:
+		workers = int(w)
+	case uint8:
+		workers = int(w)
+	case uint16:
+		workers = int(w)
+	case uint32:
+		workers = int(w)
+	case uint64:
+		workers = int(w)
+	case uintptr:
+		workers = int(w)
+	case float32:
+		workers = int(w)
+	case float64:
+		workers = int(w)
 	}
+
 	if workers == 0 || hatchRate == 0 {
 		log.Printf("Invalid hatch message from master, users is %d, hatch_rate is %.2f\n",
 			workers, hatchRate)
