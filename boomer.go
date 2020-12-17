@@ -47,6 +47,8 @@ type Boomer struct {
 	memoryProfileDuration time.Duration
 
 	outputs []Output
+
+	masterVersionV090 bool
 }
 
 // NewBoomer returns a new Boomer.
@@ -71,6 +73,10 @@ func NewStandaloneBoomer(hatchCount int, hatchRate float64) *Boomer {
 // It must be called before the test is started.
 func (b *Boomer) SetRateLimiter(rateLimiter RateLimiter) {
 	b.rateLimiter = rateLimiter
+}
+
+func (b *Boomer) SetMasterVersionV090(v bool) {
+	b.masterVersionV090 = v
 }
 
 // SetMode only accepts boomer.DistributedMode and boomer.StandaloneMode.
@@ -120,6 +126,7 @@ func (b *Boomer) Run(tasks ...*Task) {
 	switch b.mode {
 	case DistributedMode:
 		b.slaveRunner = newSlaveRunner(b.masterHost, b.masterPort, tasks, b.rateLimiter)
+		b.slaveRunner.masterVersionV090 = b.masterVersionV090
 		for _, o := range b.outputs {
 			b.slaveRunner.addOutput(o)
 		}

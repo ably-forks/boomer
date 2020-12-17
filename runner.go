@@ -284,10 +284,11 @@ func (r *localRunner) close() {
 type slaveRunner struct {
 	runner
 
-	nodeID     string
-	masterHost string
-	masterPort int
-	client     client
+	nodeID            string
+	masterHost        string
+	masterPort        int
+	masterVersionV090 bool
+	client            client
 }
 
 func newSlaveRunner(masterHost string, masterPort int, tasks []*Task, rateLimiter RateLimiter) (r *slaveRunner) {
@@ -443,7 +444,7 @@ func (r *slaveRunner) startListener() {
 func (r *slaveRunner) run() {
 	r.state = stateInit
 
-	if masterVersionV090 {
+	if r.masterVersionV090 {
 		r.client = newV090Client(r.masterHost, r.masterPort)
 	} else {
 		r.client = newClient(r.masterHost, r.masterPort, r.nodeID)
