@@ -265,6 +265,8 @@ func (r *localRunner) run() {
 		}
 	}()
 
+	Events.Publish("boomer:hatch", r.hatchCount, r.hatchRate)
+
 	if r.rateLimitEnabled {
 		r.rateLimiter.Start()
 	}
